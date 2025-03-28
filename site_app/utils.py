@@ -241,10 +241,11 @@ def send_email(subject: str, body: str, to_email: str) -> None:
     :return:
     None
     """
-    from_email = "automatkololowieckiediana@gmail.com"
-    password = "rkyu njjq yzwy duux"
-    smtp_server = "smtp.gmail.com"
-    smtp_port = 587
+
+    from_email = os.getenv('MAILBOX_USERNAME')
+    password = os.getenv('MAILBOX_PASSWORD')
+    smtp_server = os.getenv('MAILBOX_SMTP_SERVER')
+    smtp_port = os.getenv('MAILBOX_SMTP_PORT')
 
     msg = MIMEMultipart()
     msg['From'] = from_email
