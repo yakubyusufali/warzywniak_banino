@@ -1,0 +1,28 @@
+{% extends 'site_app/base.html' %}
+{% block body %}
+  <div>
+    <form method="POST" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="content-container data-container" id="data-container">
+        <div style="width: 100%;">
+          <h2>Edycja zdjęcia produktu</h2>
+        </div>
+        <div style="width: 100%; margin-bottom: 10px;">
+          {{ name }}
+        </div>
+        <div style="width: 100%">
+          <img src="{{ photo_url }}" style="width: 300px; height: auto; margin-bottom: 10px;">
+        </div>
+        <div style="width: 100%">
+          <input type="file" name="add_photo" id="add_photo" style="width: 200px; border: 1px solid gray; border-radius: 5px; margin-left: 5px; font-family: Arial, sans-serif;" required>
+        </div>
+      </div>
+      <div>
+        <a href="{% url 'site_app:item_list' %}"><button type="button" class="button back_button">Wróć</button></a>
+      </div>
+      <div>
+        <button type="submit" class="button submit_button">Zapisz</button>
+      </div>
+    </form>
+  </div>
+{% endblock %}

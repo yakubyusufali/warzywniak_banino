@@ -1,0 +1,35 @@
+{% extends 'site_app/base.html' %}
+{% block body %}
+    <div class="content-container tiles-container" id="tiles-container">
+      <form method="POST">
+      {% csrf_token %}
+        <div style="width: 100%;">
+          <h2>Komunikat</h2>
+        </div>
+        <div style="width: 100%;">
+          Czy na pewno chcesz usunąć {{ item.name }}? Jeśli produkt będzie w przyszłości dostępny, oznacz go tymczasowo jako niedostępny.
+        </div>
+        <div>
+          <a href="{% url 'site_app:item_list' %}"><button type="button" class="button back_button">Nie</button></a>
+        </div>
+        <div>
+          <button type="submit" class="button submit_button">Tak</button>
+        </div>
+      </form>
+    </div>
+    <script>
+        function filterTiles() {
+            const searchQuery = document.getElementById('search-box').value.toLowerCase();
+            const tiles = document.querySelectorAll('.tile');
+
+            tiles.forEach(tile => {
+                const tileId = tile.id.toLowerCase();
+                if (searchQuery === "" || tileId.includes(searchQuery)) {
+                    tile.classList.remove('hidden');
+                } else {
+                    tile.classList.add('hidden');
+                }
+            });
+        }
+    </script>
+{% endblock %}

@@ -1,0 +1,142 @@
+{% extends 'site_app/base.html' %}
+{% block body %}
+  <form method="POST">
+  {% csrf_token %}
+    <div class="content-container tiles-container" id="tiles-container">
+      <div style="width: 100%;">
+        <h2>Twoje zamówienie</h2>
+      </div>
+      {% if delivery == 'tomorrow' %}
+      <div style="width: 100%; border: 3px solid #44aa11; border-radius: 10px;">
+        Zamówiłeś co najmniej jeden produkt z datą dostawy na jutro. Produkty z datą dostawy na jutro oznaczone są kolorem czerwonym. Jeśli chcesz, by zamówienie zostało dostarczone jeszcze dziś, usuń artykuły oznaczone na czerwono lub przenieś je do osobnego zamówienia.
+      </div>
+      {% endif %}
+      <div style="width: 100%;">
+        <input type="text" id="search-box" placeholder="Czego szukasz?" oninput="filterTiles()">
+      </div>
+      {% for key, value in order.items %}
+      <div class="tile{% if value.delivery_days %} tomorrow{% else %} today{% endif %}" id="{{ value.name_snakecase }}">
+        <div class="photo-container">
+          <img src="{{ value.photo_url }}" class="photo-container" style="width: auto; height: auto;">
+        </div>
+        <div>
+          {{ key }}
+        </div>
+        <div>
+          {{ value.price }} zł / {{ value.unit }}
+        </div>
+        <div>
+          Ilość: {{ value.quantity }} {{ value.unit }}
+        </div>
+        <div>
+          Razem: {{ value.item_sum }} zł
+        </div>
+      </div>
+          {% endfor %}
+      <div class="tile sum-tile">
+        <div class="sum-container">
+          {{ sum }} zł
+        </div>
+        <div class="under-sum-container">
+          RAZEM
+        </div>
+      </div>
+    </div>
+    <div class="content-container data-container" id="user-data-container">
+      <div style="width: 100%;">
+        <h2>Twoje dane</h2>
+      </div>
+      <div style="width: 45%; text-align: right; margin-bottom: 10px;">
+        Numer telefonu:
+      </div>
+      <div style="width: 45%; text-align: left; margin-bottom: 10px;">
+        <input name="phone" type="text" placeholder="wymagany" value="{{ user_data.phone }}" class="data-input" required>
+      </div>
+      <div style="width: 45%; text-align: right; margin-bottom: 10px;">
+        Ulica:
+      </div>
+      <div style="width: 45%; text-align: left; margin-bottom: 10px;">
+        <input name="street" type="text" placeholder="wymagana" value="{{ user_data.street }}" class="data-input" required>
+      </div>
+      <div style="width: 45%; text-align: right; margin-bottom: 10px;">
+        Numer domu:
+      </div>
+      <div style="width: 45%; text-align: left; margin-bottom: 10px;">
+        <input name="house_number" type="text" placeholder="wymagany" value="{{ user_data.house_number }}" class="data-input" required>
+      </div>
+      <div style="width: 45%; text-align: right; margin-bottom: 10px;">
+        Numer mieszkania:
+      </div>
+      <div style="width: 45%; text-align: left; margin-bottom: 10px;">
+        <input name="flat_number" type="text" placeholder="jeśli posiadasz" value="{{ user_data.flat_number }}" class="data-input">
+      </div>
+      <div style="width: 45%; text-align: right; margin-bottom: 10px;">
+        Miejscowość:
+      </div>
+      <div style="width: 45%; text-align: left; margin-bottom: 10px;">
+        <input name="city" type="text" placeholder="wymagana" value="{{ user_data.city }}" class="data-input" required>
+      </div>
+      <div style="width: 45%; text-align: right; margin-bottom: 10px;">
+        Adres e-mail:
+      </div>
+      <div style="width: 45%; text-align: left; margin-bottom: 10px;">
+        <input name="email" type="text" placeholder="wpisz, aby otrzymać potwierdz." value="{{ user_data.email }}" class="data-input">
+      </div>
+      <div style="width: 45%; text-align: right; margin-bottom: 10px;">
+        Uwagi:
+      </div>
+      <div style="width: 45%; text-align: left; margin-bottom: 10px;">
+        <textarea name="comments" placeholder="Np. kod do domofonu, informacja o psie, informacja o nieobecności, drugi numer telefonu, wysoki nominał, dostawa bezkontaktowa, itp." style="width: 200px; height: 150px; resize: none; border: 2px solid #44aa11; border-radius: 5px; margin-left: 5px; padding: 0px 5px 0px 5px; font-family: Arial, sans-serif;">{{ user_data.comments }}</textarea>
+      </div>
+      <div style="width: 45%; text-align: right; margin-bottom: 10px;">
+        <div style="width: 100%">
+          Zapamiętaj moje dane:
+        </div>
+        <div style="width: 100%; font-size: 15px;">
+          (dane będą przechowywane na Twoim urządzeniu)
+        </div>
+      </div>
+      <div style="width: 45%; text-align: left; margin-bottom: 10px;">
+        <input type="checkbox" name="remember-data" value="True"{% if user_data %} checked{% endif %}>
+      </div>
+    </div>
+    <div class="content-container data-container" id="payment-data-container">
+      <div style="width: 100%;">
+        <h2>Wybór formy płatności</h2>
+      </div>
+      <div style="width: 45%; text-align: right; margin-bottom: 10px;">
+        BLIK przed dostawą (polecamy):
+      </div>
+      <div style="width: 45%; text-align: left; margin-bottom: 10px;">
+        <input type="radio" name="payment_method" value="blik" checked>
+      </div>
+      <div style="width: 45%; text-align: right; margin-bottom: 10px;">
+        Gotówka/karta przy odbiorze:
+      </div>
+      <div style="width: 45%; text-align: left; margin-bottom: 10px;">
+        <input type="radio" name="payment_method" value="cash">
+      </div>
+      <div>
+        <a href="{% url 'site_app:shop_view' %}"><button type="button" class="button back_button">Wróć</button></a>
+      </div>
+      <div>
+        <button type="submit" class="button submit_button">Zamów</button>
+      </div>
+    </div>
+  </form>
+  <script>
+      function filterTiles() {
+          const searchQuery = document.getElementById('search-box').value.toLowerCase();
+          const tiles = document.querySelectorAll('.tile');
+
+          tiles.forEach(tile => {
+              const tileId = tile.id.toLowerCase();
+              if (searchQuery === "" || tileId.includes(searchQuery)) {
+                  tile.classList.remove('hidden');
+              } else {
+                  tile.classList.add('hidden');
+              }
+          });
+      }
+  </script>{% endblock %}
+
