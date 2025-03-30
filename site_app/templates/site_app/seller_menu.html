@@ -1,0 +1,25 @@
+{% extends 'site_app/base.html' %}
+{% block body %}
+  <div>
+    <form method="POST">
+      {% csrf_token %}
+      <div class="content-container data-container" id="login-container">
+        <div style="width: 100%;">
+          <h2>Menu</h2>
+        </div>
+        <div>
+          <a href="{% url 'site_app:order_list' %}"><button type="button" class="button menu-button">Zamówienia</button></a>
+        </div>
+        <div>
+          <a href="{% url 'site_app:item_list' %}"><button type="button" class="button menu-button">Produkty</button></a>
+        </div>
+        <div>
+          <a href="{% url 'site_app:add_item' %}"><button type="button" class="button menu-button">Dodaj produkt</button></a>
+        </div>
+        <div>
+          <a href="{% url 'site_app:logout' %}"><button type="button" class="button back_button">Wyloguj</button></a>
+        </div>
+      </div>
+    </form>
+  </div>
+{% endblock %}

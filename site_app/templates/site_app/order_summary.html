@@ -1,0 +1,223 @@
+{% extends 'site_app/base.html' %}
+{% block head %}
+<script>
+function copyToClipboard(elementSelector, trigger) {
+  var copyText = document.querySelector(elementSelector);
+  var textArea = document.createElement("textarea");
+  textArea.value = copyText.innerText;
+  document.body.appendChild(textArea);
+  textArea.select();
+  textArea.setSelectionRange(0, 99999);
+  document.execCommand("copy");
+  document.body.removeChild(textArea);
+  if (trigger) {
+    trigger.innerText = "OK";
+    setTimeout(function() {
+      trigger.innerText = "Kopiuj";
+    }, 3000);
+  }
+}
+
+</script>
+{% endblock %}
+{% block body %}
+  <div class="content-container data-container" id="summary-info-container">
+    <div style="width: 100%;">
+      <h2>Dziękujemy za złożenie zamówienia.</h2>
+    </div>
+    <div style="width: 45%; text-align: right; margin-bottom: 20px;">
+      Numer zamówienia to:
+    </div>
+    <div style="width: 45%; text-align: left; margin-bottom: 10px; margin-left: 5px; padding: 0px 5px 0px 5px;">
+      {{ order_id }}
+    </div>
+    {% if payment_method == 'blik' %}
+    <div style="width: 100%; margin-bottom: 10px;">
+      Wybrano płatność BLIK, poniżej znajdziesz dane do płatności:
+    </div>
+    <div style="width: 45%; text-align: right; margin-bottom: 10px;">
+      Nazwa odbiorcy:
+    </div>
+    <div id="payment_data_name" style="width: 35%; text-align: left; margin-bottom: 10px; margin-left: 5px; padding: 0px 5px 0px 5px;">
+      Warzywniak w Baninie
+    </div>
+    <div style="width: 10%; text-align: left; margin-bottom: 10px;">
+      <a href="javascript:void(0)" onclick="copyToClipboard('#payment_data_name', this)" style="padding-left: 20px; color: black; text-decoration: none;">Kopiuj</a>
+    </div>
+    <div style="width: 45%; text-align: right; margin-bottom: 10px;">
+      Adres cz. 1:
+    </div>
+    <div id="payment_data_address_p1" style="width: 35%; text-align: left; margin-bottom: 10px; margin-left: 5px; padding: 0px 5px 0px 5px;">
+      ul. Lotnicza 11
+    </div>
+    <div style="width: 10%; text-align: left; margin-bottom: 10px;">
+      <a href="javascript:void(0)" onclick="copyToClipboard('#payment_data_address_p1', this)" style="padding-left: 20px; color: black; text-decoration: none;">Kopiuj</a>
+    </div>
+    <div style="width: 45%; text-align: right; margin-bottom: 10px;">
+      Adres cz. 2:
+    </div>
+    <div id="payment_data_address_p2" style="width: 35%; text-align: left; margin-bottom: 10px; margin-left: 5px; padding: 0px 5px 0px 5px;">
+      83-200 Banino
+    </div>
+    <div style="width: 10%; text-align: left; margin-bottom: 10px;">
+      <a href="javascript:void(0)" onclick="copyToClipboard('#payment_data_address_p2', this)" style="padding-left: 20px; color: black; text-decoration: none;">Kopiuj</a>
+    </div>
+    <div style="width: 45%; text-align: right; margin-bottom: 10px;">
+      Numer telefonu do przelewu:
+    </div>
+    <div id="payment_data_phone" style="width: 35%; text-align: left; margin-bottom: 10px; margin-left: 5px; padding: 0px 5px 0px 5px;">
+      794 797 797
+    </div>
+    <div style="width: 10%; text-align: left; margin-bottom: 10px;">
+      <a href="javascript:void(0)" onclick="copyToClipboard('#payment_data_phone', this)" style="padding-left: 20px; color: black; text-decoration: none;">Kopiuj</a>
+    </div>
+    <div style="width: 45%; text-align: right; margin-bottom: 10px;">
+    Tytuł przelewu:
+    </div>
+    <div id="payment_data_order_id" style="width: 35%; text-align: left; margin-bottom: 10px; margin-left: 5px; padding: 0px 5px 0px 5px;">
+      {{ order_id }}
+    </div>
+    <div style="width: 10%; text-align: left; margin-bottom: 10px;">
+      <a href="javascript:void(0)" onclick="copyToClipboard('#payment_data_order_id', this)" style="padding-left: 20px; color: black; text-decoration: none;">Kopiuj</a>
+    </div>
+    <div style="width: 45%; text-align: right; margin-bottom: 10px;">
+      Kwota przelewu:
+    </div>
+    <div id="payment_data_sum" style="width: 35%; text-align: left; margin-bottom: 10px; margin-left: 5px; padding: 0px 5px 0px 5px;">
+      <div id="payment_data_sum_value" style="display: inline;">
+        {{ sum }}
+      </div>
+      <div id="payment_data_sum_currency" style="display: inline;">
+        zł
+      </div>
+    </div>
+    <div style="width: 10%; text-align: left; margin-bottom: 10px;">
+      <a href="javascript:void(0)" onclick="copyToClipboard('#payment_data_sum_value', this)" style="padding-left: 20px; color: black; text-decoration: none;">Kopiuj</a>
+    </div>{% else %}
+    <div style="width: 100%; margin-bottom: 10px;">
+      Wybrano płatność gotówką lub kartą podczas odbioru. Pamiętaj, że musisz być obecny podczas dostawy. Zachęcamy do płatności kartą. W przypadku płatności gotówką prosimy o posiadanie możliwie odliczonej kwoty.
+    </div>{% endif %}{% if user_data.email %}
+    <div style="width: 100%; margin-bottom: 10px;">
+      Na Twój adres e-mail przesłaliśmy podsumowanie niniejszego zamówienia.
+    </div>{% endif %}
+  </div>
+  <div class="content-container tiles-container" id="tiles-container">
+    <div style="width: 100%;">
+      <h2>Podsumowanie</h2>
+    </div>
+    {% for key, value in order.items %}
+    <div class="tile{% if value.delivery_days %} tomorrow{% else %} today{% endif %}" id="{{ value.name_snakecase }}">
+      <div class="photo-container">
+        <img src="{{ value.photo_url }}" class="photo-container" style="width: auto; height: auto;">
+      </div>
+      <div>
+        {{ key }}
+      </div>
+      <div>
+        {{ value.price }} zł / {{ value.unit }}
+      </div>
+      <div>
+        Ilość: {{ value.quantity }} {{ value.unit }}
+      </div>
+      <div>
+        Razem: {{ value.item_sum }} zł
+      </div>
+    </div>
+        {% endfor %}
+    <div class="tile sum-tile">
+      <div class="sum-container">
+        {{ sum }} zł
+      </div>
+      <div class="under-sum-container">
+        RAZEM
+      </div>
+    </div>
+  </div>
+  <div class="content-container data-container" id="user-data-container">
+    <div style="width: 100%;">
+      <h2>Twoje dane</h2>
+    </div>
+    <div style="width: 40%; text-align: right; margin-bottom: 10px;">
+      Numer telefonu:
+    </div>
+    <div style="width: 40%; text-align: left; margin-bottom: 10px; margin-left: 5px; padding: 0px 5px 0px 5px; font-family: Arial, sans-serif;">
+      {{ user_data.phone }}
+    </div>
+    <div style="width: 40%; text-align: right; margin-bottom: 10px;">
+      Ulica:
+    </div>
+    <div style="width: 40%; text-align: left; margin-bottom: 10px; margin-left: 5px; padding: 0px 5px 0px 5px; font-family: Arial, sans-serif;">
+      {{ user_data.street }}
+    </div>
+    <div style="width: 40%; text-align: right; margin-bottom: 10px;">
+      Numer domu:
+    </div>
+    <div style="width: 40%; text-align: left; margin-bottom: 10px; margin-left: 5px; padding: 0px 5px 0px 5px; font-family: Arial, sans-serif;">
+      {{ user_data.house_number }}
+    </div>{% if user_data.flat_number %}
+    <div style="width: 40%; text-align: right; margin-bottom: 10px;">
+      Numer mieszkania:
+    </div>
+    <div style="width: 40%; text-align: left; margin-bottom: 10px; margin-left: 5px; padding: 0px 5px 0px 5px; font-family: Arial, sans-serif;">
+      {{ user_data.flat_number }}
+    </div>{% endif %}
+    <div style="width: 40%; text-align: right; margin-bottom: 10px;">
+      Miejscowość:
+    </div>
+    <div style="width: 40%; text-align: left; margin-bottom: 10px; margin-left: 5px; padding: 0px 5px 0px 5px; font-family: Arial, sans-serif;">
+      {{ user_data.city }}
+    </div>{% if user_data.email %}
+    <div style="width: 40%; text-align: right; margin-bottom: 10px;">
+      Adres e-mail:
+    </div>
+    <div style="width: 40%; text-align: left; margin-bottom: 10px; margin-left: 5px; padding: 0px 5px 0px 5px; font-family: Arial, sans-serif;">
+      {{ user_data.email }}
+    </div>{% endif %}{% if user_data.comments %}
+    <div style="width: 40%; text-align: right; margin-bottom: 10px;">
+      Uwagi:
+    </div>
+    <div style="width: 40%; text-align: left; margin-bottom: 10px; margin-left: 5px; padding: 0px 5px 0px 5px; font-family: Arial, sans-serif;">
+      {{ user_data.comments }}
+    </div>{% endif %}
+    <div style="width: 45%; text-align: right; margin-bottom: 10px;">
+      <div style="width: 100%">
+        Zapamiętaj moje dane:
+      </div>
+      <div style="width: 100%; font-size: 15px;">
+        (dane będą przechowywane na Twoim urządzeniu)
+      </div>
+    </div>
+    <div style="width: 45%; text-align: left; margin-bottom: 10px; margin-left: 5px; padding: 0px 5px 0px 5px;">
+      {% if 'remember_data' in user_data %}Tak{% else %}Nie{% endif %}
+    </div>
+  </div>
+  <div class="content-container data-container" id="payment-data-container">
+    <div style="width: 100%;">
+      <h2>Wybór formy płatności</h2>
+    </div>
+    <div style="width: 45%; text-align: right; margin-bottom: 10px;">
+      Wybrana forma płatności:
+    </div>
+    <div style="width: 45%; text-align: left; margin-bottom: 10px; margin-left: 5px; padding: 0px 5px 0px 5px;">
+      {% if payment_method == 'blik' %}BLIK przed dostawą{% else %}Gotówka/karta przy odbiorze{% endif %}
+    </div>
+    <div>
+      <a href="{% url 'site_app:shop_view' %}"><button type="button" class="button back_button">Home</button></a>
+    </div>
+  </div>
+  <script>
+      function filterTiles() {
+          const searchQuery = document.getElementById('search-box').value.toLowerCase();
+          const tiles = document.querySelectorAll('.tile');
+
+          tiles.forEach(tile => {
+              const tileId = tile.id.toLowerCase();
+              if (searchQuery === "" || tileId.includes(searchQuery)) {
+                  tile.classList.remove('hidden');
+              } else {
+                  tile.classList.add('hidden');
+              }
+          });
+      }
+  </script>{% endblock %}
+

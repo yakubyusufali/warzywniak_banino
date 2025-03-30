@@ -1,0 +1,64 @@
+{% extends 'site_app/base.html' %}
+{% block body %}
+  <form method="POST">
+  {% csrf_token %}
+    <div class="content-container tiles-container" id="tiles-container">
+      <div style="width: 100%;">
+        <h2>Zobacz, co dla Ciebie mamy!</h2>
+      </div>
+      <div style="width: 100%;">
+        <input type="text" id="search-box" placeholder="Czego szukasz?" oninput="filterTiles()">
+      </div>
+      <div style="width: 100%; display: flex; flex-wrap: wrap; justify-content: center;">
+        <div style="width: 20px; height: auto; border: 3px solid #44aa11; border-radius: 5px;">
+        </div>
+        <div style="width: auto; margin-left: 5px;">
+          - dostawa jeszcze dziś
+        </div>
+        <div style="width: 20px; height: auto; border: 3px solid red; border-radius: 5px; margin-left: 10px;">
+        </div>
+        <div style="width: auto; margin-left: 5px;">
+          - dostawa w najbliższy dzień roboczy
+        </div>
+      </div>{% for item in items %}
+      <div class="tile{% if item.delivery_days %} tomorrow{% else %} today{% endif %}" id="{{ item.name_snakecase }}">
+        <div class="photo-container">
+          <img src="{{ item.photo_url }}" class="photo-container" style="width: auto; height: auto;">
+        </div>
+        <div>
+          {{ item.name }}
+        </div>
+        <div>
+          {{ item.price }} zł / {{ item.unit }}
+        </div>
+        <div>
+          Ilość:
+          <input type="text" name="{{item.name_snakecase}}-quantity" style="display: inline-block; width: 35px;" placeholder="{% if item.unit == 'szt.' %}0{% else %}0,00{% endif %}">
+          {{ item.unit }}
+        </div>
+      </div>
+        {% endfor %}
+    </div>
+    <div>
+      <a href="{% url 'site_app:index' %}"><button type="button" class="button back_button">Wróć</button></a>
+    </div>
+    <div>
+      <button type="submit" class="button submit_button">Dalej</button>
+    </div>
+  </form>
+  <script>
+      function filterTiles() {
+          const searchQuery = document.getElementById('search-box').value.toLowerCase();
+          const tiles = document.querySelectorAll('.tile');
+
+          tiles.forEach(tile => {
+              const tileId = tile.id.toLowerCase();
+              if (searchQuery === "" || tileId.includes(searchQuery)) {
+                  tile.classList.remove('hidden');
+              } else {
+                  tile.classList.add('hidden');
+              }
+          });
+      }
+  </script>{% endblock %}
+

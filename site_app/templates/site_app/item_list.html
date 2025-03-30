@@ -1,0 +1,72 @@
+{% extends 'site_app/base.html' %}
+{% block body %}
+    <form method="POST" class="item-list-form">
+    {% csrf_token %}
+      <div class="content-container tiles-container" id="tiles-container">
+        <div style="width: 100%;">
+          <h2>Asortyment</h2>
+        </div>
+        <div style="width: 100%;">
+          <input type="text" id="search-box" placeholder="Czego szukasz?" oninput="filterTiles()">
+        </div>{% for item in items %}
+        <div class="tile item-tile" id="{{ item.name_snakecase }}">
+          <div style="margin: 5px 0px 5px 0px;">
+            <input type="text" value="{{ item.name }}" style="display: inline-block; width: 75%;" name="{{item.name_snakecase}}-name">
+          </div>
+          <div>
+            <a href="{% url 'site_app:change_photo' item.id %}" target="_blank">[Zmień zdjęcie]</a>
+          </div>
+          <div>
+            <input type="text" value="{{ item.price }}" style="display: inline-block; width: 35px;" name="{{item.name_snakecase}}-price">
+            zł /
+            <select name="{{item.name_snakecase}}-unit">
+              <option value="kg."{% if item.unit == 'kg.' %} selected{% endif %}>kg.</option>
+              <option value="szt."{% if item.unit == 'szt.' %} selected{% endif %}>szt.</option>
+            </select>
+          </div>
+          <div>
+            <label>
+              <input type="checkbox" name="{{item.name_snakecase}}-availability"{% if item.is_available %} checked{% endif %}>
+            Dostępny
+            </label>
+          </div>
+          <div>
+            <label>
+              <input type="radio" name="{{item.name_snakecase}}-delivery_date" value="today"{% if item.delivery_days == 0 %} checked{% endif %}>
+              Dziś
+            </label>
+            <label>
+              <input type="radio" name="{{item.name_snakecase}}-delivery_date" value="tomorrow"{% if item.delivery_days == 1 %} checked{% endif %}>
+              Jutro
+            </label>
+          </div>
+          <div>
+            <a href="{% url 'site_app:delete_item' item.id %}">[Usuń produkt]</a>
+          </div>
+        </div>{% endfor %}
+        <div style="display: inline;">
+          <div>
+            <a href="{% url 'site_app:seller_menu' %}"><button type="button" class="button back_button">Wróć</button></a>
+          </div>
+          <div>
+            <button type="submit" class="button submit_button">Zapisz</button>
+          </div>
+        </div>
+      </div>
+    </form>
+    <script>
+        function filterTiles() {
+            const searchQuery = document.getElementById('search-box').value.toLowerCase();
+            const tiles = document.querySelectorAll('.tile');
+
+            tiles.forEach(tile => {
+                const tileId = tile.id.toLowerCase();
+                if (searchQuery === "" || tileId.includes(searchQuery)) {
+                    tile.classList.remove('hidden');
+                } else {
+                    tile.classList.add('hidden');
+                }
+            });
+        }
+    </script>
+{% endblock %}

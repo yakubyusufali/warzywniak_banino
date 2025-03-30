@@ -1,0 +1,28 @@
+{% extends 'site_app/base.html' %}
+{% block body %}
+  <div>
+    <form method="POST">
+      {% csrf_token %}
+      <div class="content-container data-container" id="login-container">
+        <div style="width: 100%;">
+          <h2>Logowanie</h2>
+        </div>
+        <div class="label-container">
+          <label class="login_field_label">Login:</label>
+        </div>
+        <div class="input-container">
+          <input type="text" id="login" name="login" class="login_field">
+        </div>
+        <div class="label-container">
+          <label class="login_field_label">Hasło:</label>
+        </div>
+        <div class="input-container">
+          <input type="password" id="password" name="password" class="login_field">
+        </div>
+        <div>
+          <button type="submit" class="button submit_button">Zaloguj</button>
+        </div>
+      </div>
+    </form>
+  </div>
+{% endblock %}

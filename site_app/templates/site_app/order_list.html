@@ -1,0 +1,55 @@
+{% extends 'site_app/base.html' %}
+{% block body %}
+    <div class="content-container tiles-container" id="user-data-container">
+      <div style="width: 100%;">
+        <h2>Zamówienia</h2>
+      </div>
+      <div style="width: 100%;">
+        <input type="text" id="search-box" placeholder="Nr zam., nr tel. lub miejscowość" oninput="filterTiles()">
+      </div>
+      {% for order in orders %}
+      <div class="tile{% if order.delivery_today %} today{% else %} tomorrow{% endif %}" id="{{ order.order_id_str }}_{{ order.order_id }}_{{ order.city }}_{{ order.phone_number }}">
+       <div>
+          {{ order.street }} {{ order.house_nr }}{% if order.flat_nr %}/{{ order.flat_nr }}{% endif %}
+        </div>
+        <div>
+          {{ order.city }}{% if order.comments %} [!]{% endif %}
+        </div>
+        <div>
+          <a href="tel:{{ order.phone_number }}">{{ order.phone_number }}</a>
+        </div>
+        <div>
+          {{ order.sum }} zł {% if order.paid == True %}Zapł.{% elif order.payment_method == 'cash' %}got./kart.{% elif order.payment_method == 'blik' %}BLIK{% endif %}
+        </div>
+        <div>
+          {{ order.items|length }} {% if order.completed and not order.paid %}Rezygnacja{% elif order.completed %}Dostarczono{% elif oder.paid %}Opłacone{% else %}Nieopłacone{% endif %}
+        </div>
+        <div>
+          Dost: {{ order.delivery_date|date:"d.m.Y" }}
+        </div>
+        <div>
+          Szczegóły
+        </div>
+      </div>
+      {% endfor %}
+      <div>
+        <a href="{% url 'site_app:seller_menu' %}"><button type="button" class="button back_button">Wróć</button></a>
+      </div>
+    </div>
+    <script>
+        function filterTiles() {
+            const searchQuery = document.getElementById('search-box').value.toLowerCase();
+            const tiles = document.querySelectorAll('.tile');
+
+            tiles.forEach(tile => {
+                const tileId = tile.id.toLowerCase();
+                if (searchQuery === "" || tileId.includes(searchQuery)) {
+                    tile.classList.remove('hidden');
+                } else {
+                    tile.classList.add('hidden');
+                }
+            });
+        }
+    </script>
+{% endblock %}
+

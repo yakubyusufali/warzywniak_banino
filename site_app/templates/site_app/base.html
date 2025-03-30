@@ -1,0 +1,14 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Warzywniak Banino Online</title>
+  <link rel="stylesheet" href="{% static 'site_app/css/style.css' %}">{% block head %}
+  {% endblock %}
+</head>
+<body>
+  <img src="{% static 'site_app/images/logo.png' %}" id="logo">
+{% block body %}
+{% endblock %}
+</body>
+</html>

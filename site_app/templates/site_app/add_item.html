@@ -1,0 +1,68 @@
+{% extends 'site_app/base.html' %}
+{% block body %}
+  <form method="POST" enctype="multipart/form-data">
+  {% csrf_token %}
+    <div class="content-container data-container" id="user-data-container">
+      <div style="width: 100%;">
+        <h2>Dodaj produkt</h2>
+      </div>
+      <div style="width: 45%; text-align: right; margin-bottom: 10px;">
+        Nazwa:
+      </div>
+      <div style="width: 45%; text-align: left; margin-bottom: 10px;">
+        <input name="name" type="text" placeholder="wymagana" style="width: 200px; border: 1px solid gray; border-radius: 5px; margin-left: 5px; padding: 0px 5px 0px 5px; font-family: Arial, sans-serif;" required>
+      </div>
+      <div style="width: 45%; text-align: right; margin-bottom: 10px;">
+        Cena:
+      </div>
+      <div style="width: 45%; text-align: left; margin-bottom: 10px;">
+        <input name="price" type="text" placeholder="wymagana" style="width: 200px; border: 1px solid gray; border-radius: 5px; margin-left: 5px; padding: 0px 5px 0px 5px; font-family: Arial, sans-serif;" required>
+      </div>
+      <div style="width: 45%; text-align: right; margin-bottom: 10px;">
+        Jednostka miary:
+      </div>
+      <div style="width: 45%; text-align: left; margin-bottom: 10px;">
+        <select name="unit" style="width: 200px; border: 1px solid gray; border-radius: 5px; margin-left: 5px; padding: 0px 5px 0px 5px; font-family: Arial, sans-serif;">
+          <option value="kg." selected>kg.</option>
+          <option value="szt.">szt.</option>
+        </select>
+      </div>
+      <div style="width: 45%; text-align: right; margin-bottom: 10px;">
+        Aktualnie dostępny:
+      </div>
+      <div style="width: 45%; text-align: left; margin-bottom: 10px;">
+        <input type="checkbox" name="is_available" checked>
+      </div>
+      <div style="width: 45%; text-align: right; margin-bottom: 10px;">
+        Dostawa:
+      </div>
+      <div style="width: 45%; text-align: left; margin-bottom: 10px;">
+        <div style="width: 100%;">
+          <label>
+            <input type="radio" name="delivery_date" value="today" checked>
+            Dziś
+          </label>
+        </div>
+        <div style="width: 100%;">
+          <label>
+            <input type="radio" name="delivery_date" value="tomorrow">
+            Następny dzień roboczy
+          </label>
+        </div>
+      </div>
+      <div style="width: 45%; text-align: right; margin-bottom: 10px;">
+        Zdjęcie:
+      </div>
+      <div style="width: 45%; text-align: left; margin-bottom: 10px;">
+        <input type="file" name="add_photo" id="add_photo" style="width: 200px; border: 1px solid gray; border-radius: 5px; margin-left: 5px; font-family: Arial, sans-serif;" required>
+      </div>
+    </div>
+    <div>
+      <a href="{% url 'site_app:seller_menu' %}"><button type="button" class="button back_button">Wróć</button></a>
+    </div>
+    <div>
+      <button type="submit" class="button submit_button">Zapisz</button>
+    </div>
+  </form>
+{% endblock %}
+

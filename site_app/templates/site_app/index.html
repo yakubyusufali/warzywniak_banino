@@ -1,0 +1,41 @@
+{% extends 'site_app/base.html' %}
+{% block body %}
+    <div class="content-container tiles-container" id="tiles-container">
+      <div style="width: 100%;">
+        <h2>Witamy w naszym warzywniaku online!</h2>
+      </div>
+      <div style="width: 100%;">
+        Dziękujemy, że jesteś z nami! To dzięki takim klientom jak Ty możemy z dumą kontynuować naszą pasję i misję, która trwa już od 25 lat. Jesteśmy rodzinną firmą, która od pokoleń specjalizuje się w handlu owocami i warzywami, wybierając dla Ciebie produkty najwyższej jakości, pełne smaku i świeżości.
+      </div>
+      <div style="width: 100%;">
+        Każdego dnia dokładamy wszelkich starań, by dostarczać owoce i warzywa, które nie tylko wzbogacają Twoje posiłki, ale także wspierają zdrowy styl życia. Współpracujemy z lokalnymi dostawcami, dbając o to, by każdy produkt trafiający na Twój stół był starannie wyselekcjonowany i pochodził z pewnych, ekologicznych źródeł.
+      </div>
+      <div style="width: 100%;">
+        Z nami możesz mieć pewność, że wybierasz zdrowie, smak i tradycję. W naszym sklepie online znajdziesz bogaty wybór świeżych warzyw, soczystych owoców oraz produktów sezonowych – idealnych zarówno do codziennych posiłków, jak i wyjątkowych okazji.
+      </div>
+      <div style="width: 100%;">
+        Dziękujemy, że obdarzasz nas swoim zaufaniem. Jesteśmy tu po to, by Twoje zakupy były proste, szybkie i przyjemne. Jeśli masz pytania lub potrzebujesz porady, zawsze chętnie Ci pomożemy – bo dla nas liczy się Twój komfort i zadowolenie.
+      </div>
+      <div style="width: 100%;">
+        Zapraszamy do zakupów i dziękujemy, że jesteś częścią naszej historii!
+      </div>
+      <div>
+        <a href="{% url 'site_app:shop_view' %}"><button type="button" class="button submit_button">Sklep</button></a>
+      </div>
+    </div>
+    <script>
+        function filterTiles() {
+            const searchQuery = document.getElementById('search-box').value.toLowerCase();
+            const tiles = document.querySelectorAll('.tile');
+
+            tiles.forEach(tile => {
+                const tileId = tile.id.toLowerCase();
+                if (searchQuery === "" || tileId.includes(searchQuery)) {
+                    tile.classList.remove('hidden');
+                } else {
+                    tile.classList.add('hidden');
+                }
+            });
+        }
+    </script>
+{% endblock %}
