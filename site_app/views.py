@@ -12,19 +12,34 @@ from site_app import utils
 
 
 class IndexView(views.View):
+    """
+    View for rendering the index page.
+    """
     def get(self, request):
         """
-        Renders ndex page.
+        Renders the index page.
+
+        :param request: HttpRequest object.
+
+        :return: HttpResponse object rendering the index page.
         """
         return render(
             request,
             'site_app/index.html',
         )
 
+
 class LoginView(views.View):
+    """
+    View for handling user login.
+    """
     def get(self, request):
         """
-        Renders login page
+        Renders the login page.
+
+        :param request: HttpRequest object.
+
+        :return: HttpResponse object rendering the login page.
         """
         return render(
             request,
@@ -33,12 +48,17 @@ class LoginView(views.View):
 
     def post(self, request):
         """
-        1. Loads data from POST form,
-        2. Sets user variable as None,
-        3. Checks, if user with given username exists in database,
-        4. If user exists, checks if password is correct, if user doesn't exist, reloads login page,
-        5. If password is correct, logs the user in and redirects to seller menu, if password is incorrect, reloads
-            login page,
+        Handles user login form submission.
+
+        1. Loads data from the POST form.
+        2. Sets the user variable as None.
+        3. Checks if a user with the given username exists in the database.
+        4. If the user exists, checks if the password is correct; if not, reloads the login page.
+        5. If the password is correct, logs the user in and redirects to the seller menu; if not, reloads the login page.
+
+        :param request: HttpRequest object containing login form data.
+
+        :return: HttpResponse object redirecting to the seller menu if login is successful, or reloads the login page.
         """
         data = request.POST
         user = None
@@ -53,13 +73,21 @@ class LoginView(views.View):
 
 
 class ItemListView(LoginRequiredMixin, views.View):
+    """
+    View for displaying and managing a list of items.
+    """
     def get(self, request):
         """
-        1. Loads non-deleted items (products) data from database, orders items alphabetically by its name and converts
-            data to list type.
-        2. Converts price of each product to str type,
-        3. Loads item list to page context data,
-        4. Renders item list page (products manager).
+        Displays a list of items (products) for management.
+
+        1. Loads non-deleted items (products) data from the database, orders them alphabetically by name, and converts the data to a list.
+        2. Converts the price of each product to a string.
+        3. Loads the item list into the page context data.
+        4. Renders the item list page (products manager).
+
+        :param request: HttpRequest object.
+
+        :return: HttpResponse object rendering the item list page.
         """
         items = list(models.Item.objects.filter(deleted=False).order_by('name'))
         for item in items:
@@ -75,12 +103,17 @@ class ItemListView(LoginRequiredMixin, views.View):
 
     def post(self, request):
         """
-        1. Loads data prom POST form,
-        2. Prepares dict containing loaded items data,
-        3. Loads each item data from prepared dict,
-        4. Loads data of each item from database and overwrites item data with new data from dict, then saves each item
-            data.
-        5. Redirects back to item list page (products manager).
+        Handles the form submission for updating item data.
+
+        1. Loads data from the POST form.
+        2. Prepares a dictionary containing the loaded items data.
+        3. Loads each item's data from the prepared dictionary.
+        4. Loads the data of each item from the database and overwrites the item data with the new data from the dictionary, then saves each item's data.
+        5. Redirects back to the item list page (products manager).
+
+        :param request: HttpRequest object containing item update data.
+
+        :return: HttpResponse object redirecting to the item list page.
         """
         data = request.POST
         new_data = utils.prepare_new_item_list_data(data)
@@ -98,13 +131,21 @@ class ItemListView(LoginRequiredMixin, views.View):
 
 
 class ShopView(views.View):
+    """
+    View for displaying the shop page and handling order submissions.
+    """
     def get(self, request):
         """
-        1. Loads non-deleted items (products) data from database, orders items alphabetically by its name and converts
-            data to list type.
-        2. Converts price of each product to str type,
-        3. Loads item list to page context data,
-        4. Renders shopping page (product list).
+        Displays the shop page with a list of available products.
+
+        1. Loads non-deleted items (products) data from the database, orders them alphabetically by name, and converts the data to a list.
+        2. Converts the price of each product to a string.
+        3. Loads the item list into the page context data.
+        4. Renders the shopping page (product list).
+
+        :param request: HttpRequest object.
+
+        :return: HttpResponse object rendering the shop page.
         """
         items = models.Item.objects.filter(deleted=False).order_by('name')
         for item in items:
@@ -117,8 +158,6 @@ class ShopView(views.View):
             order_data = request.COOKIES.get('order')
             context['errors'] = errors
             context['order'] = order_data
-            print(errors)
-            print(order_data)
         res = render(
             request,
             'site_app/shop.html',
@@ -130,22 +169,24 @@ class ShopView(views.View):
 
     def post(self, request):
         """
-        1. Loads data prom POST form,
-        2. Prepares dict containing raw loaded order data,
-        3. Loads data of each ordered product from database and prepares full product list, counts order sum and order
-            delivery date,
-        4. Saves order data, order sum and delivery date to session,
-        5. Redirects to order confirmation page.
+        Handles the form submission for placing an order.
+
+        1. Loads data from the POST form.
+        2. Prepares a dictionary containing the raw loaded order data.
+        3. Loads the data of each ordered product from the database and prepares a full product list, counts the order sum, and calculates the order delivery date.
+        4. Saves the order data, order sum, and delivery date to the session.
+        5. Redirects to the order confirmation page.
+
+        :param request: HttpRequest object containing order data.
+
+        :return: HttpResponse object redirecting to the order confirmation page or shop page with errors.
         """
         data = request.POST
         order_raw, errors = utils.prepare_raw_order_data(data)
         if errors:
-            loaded_data = {}
-            for record in data:
-                loaded_data[record.split('-')[0]] = data[record]
             res = redirect('site_app:shop_view')
             res.set_cookie('errors', json.dumps(errors))
-            res.set_cookie('order', json.dumps(loaded_data))
+            res.set_cookie('order', json.dumps(data))
             return res
         else:
             order_items, order_sum, order_delivery = utils.prepare_order_data(order_raw)
@@ -156,12 +197,21 @@ class ShopView(views.View):
 
 
 class OrderConfirmationView(views.View):
+    """
+    View for displaying and handling order confirmation.
+    """
     def get(self, request):
         """
-        1. Loads user data if exists in cookies,
-        2. Loads order sum from session,
-        3. Loads order data, order sum (converted to str), delivery date and user data (if exists) to page context,
-        4. Renders order confirmation page.
+        Displays the order confirmation page.
+
+        1. Loads user data if it exists in cookies.
+        2. Loads the order sum from the session.
+        3. Loads the order data, order sum (converted to string), delivery date, and user data (if it exists) into the page context.
+        4. Renders the order confirmation page.
+
+        :param request: HttpRequest object.
+
+        :return: HttpResponse object rendering the order confirmation page.
         """
         user_data = request.COOKIES.get('user_data')
         order_sum = request.session['order_sum']
@@ -179,16 +229,22 @@ class OrderConfirmationView(views.View):
 
     def post(self, request):
         """
-        1. Loads data from POST form,
-        2. Saves new order in database and gets str representation of new order ID,
-        3. Converts user data to JSON,
-        4. Prepares response object,
-        5. Saves user data to cookies if the user chose to save it or deletes the user data if they didn't,
-        6. Loads user data, payment method and order ID to session,
-        7. Redirects to order summary page.
+        Handles the form submission for confirming an order.
+
+        1. Loads data from the POST form.
+        2. Saves the new order in the database and gets a string representation of the new order ID.
+        3. Converts the user data to JSON.
+        4. Prepares a response object.
+        5. Saves the user data to cookies if the user chose to save it, or deletes the user data if they didn't.
+        6. Loads the user data, payment method, and order ID into the session.
+        7. Redirects to the order summary page.
+
+        :param request: HttpRequest object containing order confirmation data.
+
+        :return: HttpResponse object redirecting to the order summary page.
         """
         data = request.POST
-        order_id_str = utils.add_new_order(request, data)
+        id_str = utils.add_new_order(request, data)
         user_data = utils.convert_user_data_to_json(data)
         res = redirect('site_app:order_summary')
         if 'remember-data' in data:
@@ -197,23 +253,32 @@ class OrderConfirmationView(views.View):
             res.delete_cookie('user_data')
         request.session['user_data'] = user_data
         request.session['payment_method'] = data['payment_method']
-        request.session['order_id'] = order_id_str
+        request.session['id'] = id_str
         return res
 
 
 class OrderSummaryView(views.View):
+    """
+    View for displaying the order summary.
+    """
     def get(self, request):
         """
-        1. Loads data from session to page context,
-        2. Cleans session,
-        3. Renders order summary view.
+        Displays the order summary page.
+
+        1. Loads data from the session into the page context.
+        2. Cleans the session.
+        3. Renders the order summary view.
+
+        :param request: HttpRequest object.
+
+        :return: HttpResponse object rendering the order summary page.
         """
         context = {
             'order': json.loads(request.session['order_items']),
             'sum': request.session['order_sum'],
             'user_data': json.loads(request.session['user_data']),
             'payment_method': request.session['payment_method'],
-            'order_id': request.session['order_id'],
+            'id': request.session['id'],
         }
         request.session.flush()
         return render(
@@ -224,13 +289,21 @@ class OrderSummaryView(views.View):
 
 
 class OrderListView(LoginRequiredMixin, views.View):
+    """
+    View for displaying a list of orders for management.
+    """
     def get(self, request):
         """
-        1. Loads filtered order list from database (loads only not completed, today or future orders) and orders it by
-            delivery date,
-        2. Loads each order product list, order sum, order ID and checks if given order has today's delivery date,
-        3. Load orders data to page context,
-        4. Renders order list page.
+        Displays a list of orders for management.
+
+        1. Loads a filtered order list from the database (loads only not completed, today, or future orders) and orders it by delivery date.
+        2. Loads each order's product list, order sum, order ID, and checks if the given order has today's delivery date.
+        3. Loads the orders data into the page context.
+        4. Renders the order list page.
+
+        :param request: HttpRequest object.
+
+        :return: HttpResponse object rendering the order list page.
         """
         orders = models.Order.objects\
             .filter(Q(completed=False) & Q(delivery_date__gte=timezone.now().date()))\
@@ -238,7 +311,7 @@ class OrderListView(LoginRequiredMixin, views.View):
         for single_order in orders:
             single_order.items = json.loads(single_order.items)
             single_order.sum = str(single_order.sum).replace('.', ',')
-            single_order.order_id = single_order.order_id_str.replace('-', '')
+            single_order.id = single_order.id_str.replace('-', '')
             single_order.delivery_today = True if single_order.delivery_date == timezone.now().date() else False
         context = {
             'orders': orders,
@@ -251,9 +324,16 @@ class OrderListView(LoginRequiredMixin, views.View):
 
 
 class AddItemView(LoginRequiredMixin, views.View):
+    """
+    View for adding new items.
+    """
     def get(self, request):
         """
-        Renders add-item page.
+        Renders the add-item page.
+
+        :param request: HttpRequest object.
+
+        :return: HttpResponse object rendering the add-item page.
         """
         return render(
             request,
@@ -262,10 +342,16 @@ class AddItemView(LoginRequiredMixin, views.View):
 
     def post(self, request):
         """
-        1. Loads data from POST form,
-        2. Loads uploaded photo file,
-        3. Adds new product to database,
-        4. Redirects back to add-item page.
+        Handles the form submission for adding a new item.
+
+        1. Loads data from the POST form.
+        2. Loads the uploaded photo file.
+        3. Adds the new product to the database.
+        4. Redirects back to the add-item page.
+
+        :param request: HttpRequest object containing item data.
+
+        :return: HttpResponse object redirecting to the add-item page.
         """
         data = request.POST
         photo = request.FILES.get('add_photo')
@@ -283,11 +369,22 @@ class AddItemView(LoginRequiredMixin, views.View):
 
 
 class DeleteItemView(LoginRequiredMixin, views.View):
+    """
+    View for deleting an item.
+    """
     def get(self, request, item_id):
         """
-        1. Loads item data from database by given item ID,
-        2. Loads item data to page context,
-        3. Renders delete-item page.
+        Displays the delete-item confirmation page.
+
+        1. Loads item data from the database by the given item ID.
+        2. Loads the item data into the page context.
+        3. Renders the delete-item page.
+
+        :param request: HttpRequest object.
+
+        :param item_id: The ID of the item to delete.
+
+        :return: HttpResponse object rendering the delete-item page.
         """
         item = models.Item.objects.get(id=item_id)
         context = {
@@ -301,10 +398,18 @@ class DeleteItemView(LoginRequiredMixin, views.View):
 
     def post(self, request, item_id):
         """
-        1. Loads item data from database by given item ID,
-        2. Changes item-deleted status into True,
-        3. Save changes in database,
-        4. Redirects to item list page.
+        Handles the form submission for deleting an item.
+
+        1. Loads item data from the database by the given item ID.
+        2. Changes the item-deleted status to True.
+        3. Saves the changes in the database.
+        4. Redirects to the item list page.
+
+        :param request: HttpRequest object.
+
+        :param item_id: The ID of the item to delete.
+
+        :return: HttpResponse object redirecting to the item list page.
         """
         item = models.Item.objects.get(id=item_id)
         item.deleted = True
@@ -313,11 +418,22 @@ class DeleteItemView(LoginRequiredMixin, views.View):
 
 
 class ChangePhotoView(LoginRequiredMixin, views.View):
+    """
+    View for changing an item's photo.
+    """
     def get(self, request, item_id):
         """
-        1. Loads item data from database by given item ID,
-        2. Loads item data to page context,
-        3. Renders change-item-photo page.
+        Displays the change-item-photo page.
+
+        1. Loads item data from the database by the given item ID.
+        2. Loads the item data into the page context.
+        3. Renders the change-item-photo page.
+
+        :param request: HttpRequest object.
+
+        :param item_id: The ID of the item to change the photo for.
+
+        :return: HttpResponse object rendering the change-item-photo page.
         """
         item = models.Item.objects.get(id=item_id)
         context = {
@@ -332,11 +448,19 @@ class ChangePhotoView(LoginRequiredMixin, views.View):
 
     def post(self, request, item_id):
         """
-        1. Loads item data from database by given item ID,
-        2. Loads uploaded photo file,
-        3. Saves new photo and gets it URL address,
-        4. Saves new photo URL to item record in database,
-        5. Redirects to item list page.
+        Handles the form submission for changing an item's photo.
+
+        1. Loads item data from the database by the given item ID.
+        2. Loads the uploaded photo file.
+        3. Saves the new photo and gets its URL address.
+        4. Saves the new photo URL to the item record in the database.
+        5. Redirects to the item list page.
+
+        :param request: HttpRequest object.
+
+        :param item_id: The ID of the item to change the photo for.
+
+        :return: HttpResponse object redirecting to the item list page.
         """
         item = models.Item.objects.get(id=item_id)
         photo = request.FILES.get('add_photo')
@@ -347,9 +471,16 @@ class ChangePhotoView(LoginRequiredMixin, views.View):
 
 
 class SellerMenu(LoginRequiredMixin, views.View):
+    """
+    View for rendering the seller menu page.
+    """
     def get(self, request):
         """
-        Renders seller actions menu page.
+        Renders the seller actions menu page.
+
+        :param request: HttpRequest object.
+
+        :return: HttpResponse object rendering the seller menu page.
         """
         return render(
             request,
@@ -358,9 +489,16 @@ class SellerMenu(LoginRequiredMixin, views.View):
 
 
 class LogoutView(LoginRequiredMixin, views.View):
+    """
+    View for handling user logout.
+    """
     def get(self, request):
         """
-        Renders logout page.
+        Renders the logout confirmation page.
+
+        :param request: HttpRequest object.
+
+        :return: HttpResponse object rendering the logout page.
         """
         return render(
             request,
@@ -369,8 +507,14 @@ class LogoutView(LoginRequiredMixin, views.View):
 
     def post(self, request):
         """
-        1. Logs the user out,
-        2. Redirects to shop page.
+        Logs the user out and redirects to the shop page.
+
+        1. Logs the user out.
+        2. Redirects to the shop page.
+
+        :param request: HttpRequest object.
+
+        :return: HttpResponse object redirecting to the shop page.
         """
         logout(request)
         return redirect('site_app:shop_view')

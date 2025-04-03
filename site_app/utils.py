@@ -84,13 +84,12 @@ def prepare_raw_order_data(data: Dict[str, str]) -> tuple[Dict[str, float], list
     errors = []
     for key in filter(lambda x: x not in ('csrfmiddlewaretoken', 'csrftoken', 'sessionid'), data):
         if data[key]:
-            item_name = key.split('-')[0]
             quantity_str = check_item_quantity_correctness(data[key])
             if quantity_str:
                 quantity = convert_number_to_float(quantity_str)
-                order_data[item_name] = quantity
+                order_data[key] = quantity
             else:
-                errors.append(item_name)
+                errors.append(key)
     return order_data, errors
 
 
@@ -289,7 +288,7 @@ def create_email_order_confirmation(
         user_data: Dict[str, str],
         order_data: Dict[str, Dict[str, Any]],
         order_sum: str,
-        order_id: str,
+        id: str,
         payment_method: str)\
         -> str:
     """
@@ -307,7 +306,7 @@ def create_email_order_confirmation(
     :param order_sum:
     String representation of order sum.
 
-    :param order_id:
+    :param id:
     String representation of order id.
 
     :param payment_method:
@@ -318,7 +317,7 @@ def create_email_order_confirmation(
     """
     item_list = create_email_item_list(order_data)
     message = (
-        f'Dziękujemy za złożenie zamówienia numer {order_id}.\n\n'
+        f'Dziękujemy za złożenie zamówienia numer {id}.\n\n'
         f'Poniżej znajdziesz listę zamówionych artykułów:\n'
         f'{item_list}\n'
         f'Razem: {order_sum} zł.\n\n'
@@ -340,7 +339,7 @@ def create_email_new_order(
         user_data: Dict[str, str],
         order_data: Dict[str, Dict[str, Any]],
         order_sum: str,
-        order_id: str,
+        id: str,
         payment_method: str)\
         -> str:
     """
@@ -358,7 +357,7 @@ def create_email_new_order(
     :param order_sum:
     String representation of order sum.
 
-    :param order_id:
+    :param id:
     String representation of order id.
 
     :param payment_method:
@@ -369,7 +368,7 @@ def create_email_new_order(
     """
     item_list = create_email_item_list(order_data)
     message = (
-        f"Złożono nowe zamówienie numer {order_id}.\n\n"
+        f"Złożono nowe zamówienie numer {id}.\n\n"
         f"Lista artykułów:\n"
         f"{item_list}\n"
         f"Suma: {(order_sum)} zł.\n\n"
@@ -518,7 +517,7 @@ def convert_str_date_to_datetime(str_date: str) -> datetime:
     return timezone.datetime(int(y), int(m), int(d))
 
 
-def generate_order_id() -> tuple[int, str]:
+def generate_id() -> tuple[int, str]:
     """
     Generates unique and random order ID number.
 
@@ -531,16 +530,16 @@ def generate_order_id() -> tuple[int, str]:
     - Int representation of generated ID number,
     - 6-digits str representation of ID number with a dash between each half.
     """
-    order_id = randint(1, 1000000)
+    id = randint(1, 1000000)
     id_is_unique = False
     while not id_is_unique:
-        if models.Order.objects.filter(order_id=order_id).first():
-            order_id = order_id + 1 if order_id < 999999 else 1
+        if models.Order.objects.filter(id=id).first():
+            id = id + 1 if id < 999999 else 1
         else:
             id_is_unique = True
-    order_id_str_raw = str(order_id).zfill(6)
-    order_id_str = order_id_str_raw[:3] + '-' + order_id_str_raw[3:]
-    return order_id, order_id_str
+    id_str_raw = str(id).zfill(6)
+    id_str = id_str_raw[:3] + '-' + id_str_raw[3:]
+    return id, id_str
 
 
 def add_new_order(request: HttpRequest, data: Dict) -> str:
@@ -562,15 +561,15 @@ def add_new_order(request: HttpRequest, data: Dict) -> str:
     :return:
     Str representation of order ID.
     """
-    order_id, order_id_str = generate_order_id()
+    id, id_str = generate_id()
     order_items_json = request.session['order_items']
     order_items = json.loads(order_items_json)
     order_sum = request.session['order_sum']
     order_sum_str = convert_number_to_str(order_sum)
     payment_method = data['payment_method']
     new_order = models.Order.objects.create(
-        order_id=order_id,
-        order_id_str=order_id_str,
+        id=id,
+        id_str=id_str,
         sum=order_sum,
         payment_method=payment_method,
         items=order_items_json,
@@ -582,21 +581,20 @@ def add_new_order(request: HttpRequest, data: Dict) -> str:
         email_address=data['email'],
         comments=data['comments'],
         completed=False,
-        timestamp=timezone.now(),
         delivery_date=convert_str_date_to_datetime(request.session['order_delivery']),
     )
     send_email(
         subject=f"Nowe zamówienie - {data['city']}",
-        body=create_email_new_order(data, order_items, order_sum_str, order_id_str, payment_method),
+        body=create_email_new_order(data, order_items, order_sum_str, id_str, payment_method),
         to_email='yakub.yusufali@gmail.com'
     )
     if data['email']:
         send_email(
             subject=f"Potwierdzenie złożenia zamówienia",
-            body=create_email_order_confirmation(data, order_items, order_sum_str, order_id_str, payment_method),
+            body=create_email_order_confirmation(data, order_items, order_sum_str, id_str, payment_method),
             to_email=data['email']
         )
-    return order_id_str
+    return id_str
 
 
 def convert_user_data_to_json(data: Dict[str, Any]) -> str:

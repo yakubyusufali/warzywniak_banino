@@ -8,7 +8,7 @@
         <input type="text" id="search-box" placeholder="Nr zam., nr tel. lub miejscowość" oninput="filterTiles()">
       </div>
       {% for order in orders %}
-      <div class="tile{% if order.delivery_today %} today{% else %} tomorrow{% endif %}" id="{{ order.order_id_str }}_{{ order.order_id }}_{{ order.city }}_{{ order.phone_number }}">
+      <div class="tile{% if order.delivery_today %} today{% else %} tomorrow{% endif %}" id="{{ order.id_str }}_{{ order.id }}_{{ order.city }}_{{ order.phone_number }}">
        <div>
           {{ order.street }} {{ order.house_nr }}{% if order.flat_nr %}/{{ order.flat_nr }}{% endif %}
         </div>

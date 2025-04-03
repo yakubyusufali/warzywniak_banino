@@ -29,7 +29,7 @@ function copyToClipboard(elementSelector, trigger) {
       Numer zamówienia to:
     </div>
     <div style="width: 45%; text-align: left; margin-bottom: 10px; margin-left: 5px; padding: 0px 5px 0px 5px;">
-      {{ order_id }}
+      {{ id }}
     </div>
     {% if payment_method == 'blik' %}
     <div style="width: 100%; margin-bottom: 10px;">
@@ -74,11 +74,11 @@ function copyToClipboard(elementSelector, trigger) {
     <div style="width: 45%; text-align: right; margin-bottom: 10px;">
     Tytuł przelewu:
     </div>
-    <div id="payment_data_order_id" style="width: 35%; text-align: left; margin-bottom: 10px; margin-left: 5px; padding: 0px 5px 0px 5px;">
-      {{ order_id }}
+    <div id="payment_data_id" style="width: 35%; text-align: left; margin-bottom: 10px; margin-left: 5px; padding: 0px 5px 0px 5px;">
+      {{ id }}
     </div>
     <div style="width: 10%; text-align: left; margin-bottom: 10px;">
-      <a href="javascript:void(0)" onclick="copyToClipboard('#payment_data_order_id', this)" style="padding-left: 20px; color: black; text-decoration: none;">Kopiuj</a>
+      <a href="javascript:void(0)" onclick="copyToClipboard('#payment_data_id', this)" style="padding-left: 20px; color: black; text-decoration: none;">Kopiuj</a>
     </div>
     <div style="width: 45%; text-align: right; margin-bottom: 10px;">
       Kwota przelewu:
