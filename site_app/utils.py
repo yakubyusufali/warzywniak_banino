@@ -63,7 +63,7 @@ def check_item_quantity_correctness(quantity: str) -> str:
     return ''
 
 
-def prepare_raw_order_data(request: HttpRequest, data: Dict[str, str]) -> tuple[Dict[str, Decimal], bool]:
+def prepare_raw_order_data(request: HttpRequest, data: Dict[str, str]) -> tuple[Dict[Any, str], bool]:
     """
     Processes input data containing orders to structured dictionary containing product names and their quantities.
 
@@ -428,36 +428,6 @@ def format_and_capitalize_name(name: str) -> str:
     Capitalized version of given string.
     """
     return f'{' '.join(x.capitalize() for x in name.split())}'
-
-
-def convert_number_to_str(price: float) -> str:
-    """
-    Converts number to string with a comma and two digits behind.
-
-    Changes float to string with two digits after dot, than changes a dot by comma.
-
-    :param price:
-    Float representation of a price.
-
-    :return:
-    String representation of a price with dot changed to comma and two digits behind it.
-    """
-    return f'{price:.2f}'.replace('.', ',')
-
-
-def convert_number_to_float(price: str) -> float:
-    """
-    Converts string number to float.
-
-    Replaces comma with dot and changes type to float.
-
-    :param price:
-    String representation of a price.
-
-    :return:
-    Float representation of a price .
-    """
-    return float(price.replace(',', '.'))
 
 
 def convert_str_date_to_datetime(str_date: str) -> datetime:

@@ -243,7 +243,6 @@ class OrderConfirmationView(views.View):
         :return: HttpResponse object redirecting to the order summary page.
         """
         data = request.POST
-        print(data)
         id_str = utils.add_new_order(request, data)
         user_data = utils.convert_user_data_to_json(data)
         res = redirect('site_app:order_summary')
