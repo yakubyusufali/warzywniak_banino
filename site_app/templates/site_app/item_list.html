@@ -17,7 +17,7 @@
             <a href="{% url 'site_app:change_photo' item.id %}" target="_blank">[Zmień zdjęcie]</a>
           </div>
           <div>
-            <input type="text" value="{{ item.price }}" style="display: inline-block; width: 35px;" name="{{item.name_snakecase}}-price">
+            <input type="text" value="{{ item.price|floatformat:"-2" }}" style="display: inline-block; width: 35px;" name="{{item.name_snakecase}}-price">
             zł /
             <select name="{{item.name_snakecase}}-unit">
               <option value="kg."{% if item.unit == 'kg.' %} selected{% endif %}>kg.</option>

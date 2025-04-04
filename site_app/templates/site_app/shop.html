@@ -29,7 +29,7 @@
           {{ item.name }}
         </div>
         <div>
-          {{ item.price }} zł / {{ item.unit }}
+          {{ item.price|floatformat:"-2" }} zł / {{ item.unit }}
         </div>
         <div>
           Ilość:

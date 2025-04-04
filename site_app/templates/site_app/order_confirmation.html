@@ -23,19 +23,19 @@
           {{ key }}
         </div>
         <div>
-          {{ value.price }} zł / {{ value.unit }}
+          {{ value.price|floatformat:"-2" }} zł / {{ value.unit }}
         </div>
         <div>
           Ilość: {{ value.quantity }} {{ value.unit }}
         </div>
         <div>
-          Razem: {{ value.item_sum }} zł
+          Razem: {{ value.item_sum|floatformat:"-2" }} zł
         </div>
       </div>
           {% endfor %}
       <div class="tile sum-tile">
         <div class="sum-container">
-          {{ sum }} zł
+          {{ sum|floatformat:"-2" }} zł
         </div>
         <div class="under-sum-container">
           RAZEM

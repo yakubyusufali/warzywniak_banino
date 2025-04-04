@@ -1,5 +1,4 @@
 import json
-import smtplib
 import os
 import re
 
@@ -10,8 +9,7 @@ from django.http import HttpRequest
 from django.utils import timezone
 
 from datetime import datetime
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
+from decimal import Decimal
 from PIL import Image
 from PIL.Image import Image as Img
 from random import randint
@@ -65,14 +63,14 @@ def check_item_quantity_correctness(quantity: str) -> str:
     return ''
 
 
-def prepare_raw_order_data(request: HttpRequest, data: Dict[str, str]) -> tuple[Dict[str, float], bool]:
+def prepare_raw_order_data(request: HttpRequest, data: Dict[str, str]) -> tuple[Dict[str, Decimal], bool]:
     """
     Processes input data containing orders to structured dictionary containing product names and their quantities.
 
     Function filters input data, ignores technical keys, checks remaining keys if their values are non-zero, generates
     product name by splitting param name on dash, checks inputted quantity correctness and cleans it from white marks.
-    If data's correct, function converts it to float and stores  under the corresponding key in structured dictionary,
-    if not, function adds corresponding product name to error list. Returns tule containing dict of correct order datas
+    If data's correct, function converts it to Decimal and stores  under the corresponding key in structured dictionary,
+    if not, function adds corresponding product name to error list. Returns tuple containing dict of correct order datas
     and error list.
 
     :param request: HttpRequest object.
@@ -90,7 +88,7 @@ def prepare_raw_order_data(request: HttpRequest, data: Dict[str, str]) -> tuple[
         if data[key]:
             quantity_str = check_item_quantity_correctness(data[key])
             if quantity_str:
-                quantity = convert_number_to_float(quantity_str)
+                quantity = quantity_str.replace(',', '.')
                 order_data[key] = quantity
             else:
                 messages.error(request, key)
@@ -98,7 +96,7 @@ def prepare_raw_order_data(request: HttpRequest, data: Dict[str, str]) -> tuple[
     return order_data, errors
 
 
-def prepare_order_data(order_raw: Dict[str, float]) -> Tuple[Dict[Any, Dict[str, str | Any]], float, str]:
+def prepare_order_data(order_raw: Dict[str, Decimal]) -> Tuple[Dict[Any, Dict[str, str | Any]], str, str]:
     """
     Prepares order data with all additional information, such as price, name, snakecase name, unit, quantity, sum of
     each product as well as delivery date and sum of an order.
@@ -108,37 +106,36 @@ def prepare_order_data(order_raw: Dict[str, float]) -> Tuple[Dict[Any, Dict[str,
     adds product sum to order sum and counts delivery date.
 
     :param order_raw:
-    A structured dictionary contains ordered string products names and their float quantities.
+    A structured dictionary contains ordered string products names and their Decimal quantities.
 
     :return:
     A tuple contains:
         1. A structured dictionary contains ordered string products names and all additional information about each
            ordered product in second-level dictionary containing string keys and string values.
-        2. A float number represents sum of an order.
+        2. A Decimal number represents sum of an order.
         3. A datatime object represents delivery date of an order.
     """
     order_items = {}
-    order_sum = float(0)
+    order_sum = Decimal(6)
     delivery_today = True
     for item_name in order_raw:
         item = models.Item.objects.get(name_snakecase=item_name)
-        item_quantity = order_raw[item_name]
-        item_quantity_str = convert_number_to_str(item_quantity)
-        item_sum = item_quantity // 1 * item.price if item.unit == 'szt.' else item_quantity * item.price
+        item_quantity = Decimal(order_raw[item_name])
+        item_sum = Decimal(item_quantity) // 1 * item.price if item.unit == 'szt.' else Decimal(item_quantity) * item.price
         order_items[item.name] = {
-            'price': convert_number_to_str(item.price),
+            'price': str(item.price),
             'name': item.name,
             'name_snakecase': item.name_snakecase,
             'unit': item.unit,
-            'quantity': item_quantity_str[:-3] if item_quantity % 1 == 0 or item.unit == 'szt.' else item_quantity_str,
-            'item_sum': convert_number_to_str(item_sum),
+            'quantity': str(item_quantity // 1) if item_quantity % 1 == 0 or item.unit == 'szt.' else str(item_quantity),
+            'item_sum': str(item_sum),
             'delivery_days': item.delivery_days,
             'photo_url': item.photo_url,
         }
         order_sum += item_sum
         delivery_today = False if item.delivery_days else delivery_today
     order_delivery = set_delivery_date(delivery_today)
-    return order_items, order_sum, order_delivery
+    return order_items, str(order_sum), order_delivery
 
 
 def set_delivery_date(delivery_today: bool) -> str:
@@ -249,7 +246,7 @@ def create_email_item_list(order_data: Dict[str, Dict[str, Any]]) -> str:
 def create_email_order_confirmation(
         user_data: Dict[str, str],
         order_data: Dict[str, Dict[str, Any]],
-        order_sum: str,
+        order_sum: Decimal,
         id: str,
         payment_method: str)\
         -> str:
@@ -266,7 +263,7 @@ def create_email_order_confirmation(
     any-type value as a value.
 
     :param order_sum:
-    String representation of order sum.
+    Decimal representation of order sum.
 
     :param id:
     String representation of order id.
@@ -300,7 +297,7 @@ def create_email_order_confirmation(
 def create_email_new_order(
         user_data: Dict[str, str],
         order_data: Dict[str, Dict[str, Any]],
-        order_sum: str,
+        order_sum: Decimal,
         id: str,
         payment_method: str)\
         -> str:
@@ -317,7 +314,7 @@ def create_email_new_order(
     any-type value as a value.
 
     :param order_sum:
-    String representation of order sum.
+    Decimal representation of order sum.
 
     :param id:
     String representation of order id.
@@ -526,8 +523,7 @@ def add_new_order(request: HttpRequest, data: Dict) -> str:
     id, id_str = generate_id()
     order_items_json = request.session['order_items']
     order_items = json.loads(order_items_json)
-    order_sum = request.session['order_sum']
-    order_sum_str = convert_number_to_str(order_sum)
+    order_sum = Decimal(request.session['order_sum'])
     payment_method = data['payment_method']
     new_order = models.Order.objects.create(
         id=id,
@@ -547,14 +543,14 @@ def add_new_order(request: HttpRequest, data: Dict) -> str:
     )
     send_mail(
         f"Nowe zamówienie - {data['city']}",
-        create_email_new_order(data, order_items, order_sum_str, id_str, payment_method),
+        create_email_new_order(data, order_items, order_sum, id_str, payment_method),
         os.getenv('MAILBOX_USERNAME'),
         [os.getenv('ORDER_MAIL_ADDRESS')]
     )
     if data['email']:
         send_mail(
             f"Potwierdzenie złożenia zamówienia",
-            create_email_order_confirmation(data, order_items, order_sum_str, id_str, payment_method),
+            create_email_order_confirmation(data, order_items, order_sum, id_str, payment_method),
             os.getenv('MAILBOX_USERNAME'),
             [data['email']]
         )
@@ -588,7 +584,7 @@ def convert_user_data_to_json(data: Dict[str, Any]) -> str:
         'city': data['city'],
         'email': data['email'],
         'comments': data['comments'],
-        'remember_data': True,
+        'remember_data': True if 'remember_data' in data else False,
     })
     return user_data
 

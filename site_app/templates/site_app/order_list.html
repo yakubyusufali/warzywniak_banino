@@ -19,7 +19,7 @@
           <a href="tel:{{ order.phone_number }}">{{ order.phone_number }}</a>
         </div>
         <div>
-          {{ order.sum }} zł {% if order.paid == True %}Zapł.{% elif order.payment_method == 'cash' %}got./kart.{% elif order.payment_method == 'blik' %}BLIK{% endif %}
+          {{ order.sum|floatformat:"-2" }} zł {% if order.paid == True %}Zapł.{% elif order.payment_method == 'cash' %}got./kart.{% elif order.payment_method == 'blik' %}BLIK{% endif %}
         </div>
         <div>
           {{ order.items|length }} {% if order.completed and not order.paid %}Rezygnacja{% elif order.completed %}Dostarczono{% elif oder.paid %}Opłacone{% else %}Nieopłacone{% endif %}

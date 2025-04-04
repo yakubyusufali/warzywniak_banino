@@ -8,6 +8,7 @@ from django.db.models import Q
 from django.shortcuts import render, redirect
 from django.utils import timezone
 
+from decimal import Decimal
 from site_app import models
 from site_app import utils
 
@@ -91,8 +92,6 @@ class ItemListView(LoginRequiredMixin, views.View):
         :return: HttpResponse object rendering the item list page.
         """
         items = list(models.Item.objects.filter(deleted=False).order_by('name'))
-        for item in items:
-            item.price = utils.convert_number_to_str(item.price)
         context = {
             'items': items
         }
@@ -123,7 +122,7 @@ class ItemListView(LoginRequiredMixin, views.View):
             item = models.Item.objects.get(name_snakecase=item_name)
             item.name = utils.format_and_capitalize_name(item_data['name'])
             item.name_snakecase = utils.convert_name_to_snakecase(item_data['name'])
-            item.price = utils.convert_number_to_float(item_data['price'])
+            item.price = Decimal(item_data['price'].replace(',', '.'))
             item.unit = item_data['unit']
             item.is_available = True if 'availability' in item_data else False
             item.delivery_days = 0 if item_data['delivery_date'] == 'today' else 1
@@ -153,7 +152,6 @@ class ShopView(views.View):
         if order_data_json:
             order_data = json.loads(order_data_json)
         for item in items:
-            item.price = utils.convert_number_to_str(item.price)
             item.quantity = order_data[item.name_snakecase] if order_data_json else ''
         context = {
             'items': items,
@@ -218,7 +216,7 @@ class OrderConfirmationView(views.View):
         order_sum = request.session['order_sum']
         context = {
             'order': json.loads(request.session['order_items']),
-            'sum': utils.convert_number_to_str(order_sum),
+            'sum': order_sum,
             'delivery': request.session['order_delivery'],
             'user_data': json.loads(user_data) if user_data else None,
         }
@@ -245,6 +243,7 @@ class OrderConfirmationView(views.View):
         :return: HttpResponse object redirecting to the order summary page.
         """
         data = request.POST
+        print(data)
         id_str = utils.add_new_order(request, data)
         user_data = utils.convert_user_data_to_json(data)
         res = redirect('site_app:order_summary')
@@ -311,7 +310,6 @@ class OrderListView(LoginRequiredMixin, views.View):
             .order_by('delivery_date')
         for single_order in orders:
             single_order.items = json.loads(single_order.items)
-            single_order.sum = str(single_order.sum).replace('.', ',')
             single_order.id = single_order.id_str.replace('-', '')
             single_order.delivery_today = True if single_order.delivery_date == timezone.now().date() else False
         context = {
@@ -359,7 +357,7 @@ class AddItemView(LoginRequiredMixin, views.View):
         new_item = models.Item.objects.create(
             name=utils.format_and_capitalize_name(data['name']),
             name_snakecase=utils.convert_name_to_snakecase(data['name']),
-            price=float(data['price'].replace(',', '.')),
+            price=Decimal(data['price'].replace(',', '.')),
             unit=data['unit'],
             delivery_days=0 if data['delivery_date'] == 'today' else 1,
             is_available=True if 'is_available' in data else False,
