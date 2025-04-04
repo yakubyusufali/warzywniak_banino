@@ -4,6 +4,8 @@ import os
 import re
 
 from django.conf import settings
+from django.contrib import messages
+from django.core.mail import send_mail
 from django.http import HttpRequest
 from django.utils import timezone
 
@@ -63,7 +65,7 @@ def check_item_quantity_correctness(quantity: str) -> str:
     return ''
 
 
-def prepare_raw_order_data(data: Dict[str, str]) -> tuple[Dict[str, float], list[str]]:
+def prepare_raw_order_data(request: HttpRequest, data: Dict[str, str]) -> tuple[Dict[str, float], bool]:
     """
     Processes input data containing orders to structured dictionary containing product names and their quantities.
 
@@ -73,6 +75,8 @@ def prepare_raw_order_data(data: Dict[str, str]) -> tuple[Dict[str, float], list
     if not, function adds corresponding product name to error list. Returns tule containing dict of correct order datas
     and error list.
 
+    :param request: HttpRequest object.
+
     :param data:
     A dictionary of all product IDs and ordered product quantities. Contains also technical keys.
 
@@ -81,7 +85,7 @@ def prepare_raw_order_data(data: Dict[str, str]) -> tuple[Dict[str, float], list
     non-ordered products.
     """
     order_data = {}
-    errors = []
+    errors = False
     for key in filter(lambda x: x not in ('csrfmiddlewaretoken', 'csrftoken', 'sessionid'), data):
         if data[key]:
             quantity_str = check_item_quantity_correctness(data[key])
@@ -89,7 +93,8 @@ def prepare_raw_order_data(data: Dict[str, str]) -> tuple[Dict[str, float], list
                 quantity = convert_number_to_float(quantity_str)
                 order_data[key] = quantity
             else:
-                errors.append(key)
+                messages.error(request, key)
+                errors = True
     return order_data, errors
 
 
@@ -218,49 +223,6 @@ def find_next_work_day(current_time: datetime) -> datetime:
             continue
         work_day = True
     return date
-
-
-def send_email(subject: str, body: str, to_email: str) -> None:
-    """
-    Function send e-mail message.
-
-    Function receives strings containing subject, body and receiver e-mail address and checks smtp server settings, than
-    function formats a message containing received data, gets connection with smtp server and sends e-mail message. In
-    case of connection problem, prints information in a console.
-
-    :param subject:
-    String containing message subject.
-
-    :param body:
-    String containing message body.
-
-    :param to_email:
-    String containing receiver e-mail address.
-
-    :return:
-    None
-    """
-
-    from_email = os.getenv('MAILBOX_USERNAME')
-    password = os.getenv('MAILBOX_PASSWORD')
-    smtp_server = os.getenv('MAILBOX_SMTP_SERVER')
-    smtp_port = os.getenv('MAILBOX_SMTP_PORT')
-
-    msg = MIMEMultipart()
-    msg['From'] = from_email
-    msg['To'] = to_email
-    msg['Subject'] = subject
-    msg.attach(MIMEText(body, 'plain'))
-
-    try:
-        server = smtplib.SMTP(smtp_server, smtp_port)
-        server.starttls()
-        server.login(from_email, password)
-        text = msg.as_string()
-        server.sendmail(from_email, to_email, text)
-        server.quit()
-    except Exception:
-        print(f"Error while sending e-mail: {Exception}")
 
 
 def create_email_item_list(order_data: Dict[str, Dict[str, Any]]) -> str:
@@ -583,16 +545,18 @@ def add_new_order(request: HttpRequest, data: Dict) -> str:
         completed=False,
         delivery_date=convert_str_date_to_datetime(request.session['order_delivery']),
     )
-    send_email(
-        subject=f"Nowe zamówienie - {data['city']}",
-        body=create_email_new_order(data, order_items, order_sum_str, id_str, payment_method),
-        to_email='yakub.yusufali@gmail.com'
+    send_mail(
+        f"Nowe zamówienie - {data['city']}",
+        create_email_new_order(data, order_items, order_sum_str, id_str, payment_method),
+        os.getenv('MAILBOX_USERNAME'),
+        [os.getenv('ORDER_MAIL_ADDRESS')]
     )
     if data['email']:
-        send_email(
-            subject=f"Potwierdzenie złożenia zamówienia",
-            body=create_email_order_confirmation(data, order_items, order_sum_str, id_str, payment_method),
-            to_email=data['email']
+        send_mail(
+            f"Potwierdzenie złożenia zamówienia",
+            create_email_order_confirmation(data, order_items, order_sum_str, id_str, payment_method),
+            os.getenv('MAILBOX_USERNAME'),
+            [data['email']]
         )
     return id_str
 

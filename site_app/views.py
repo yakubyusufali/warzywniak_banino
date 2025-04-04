@@ -1,6 +1,7 @@
 import json
 
 from django import views
+from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
@@ -148,22 +149,23 @@ class ShopView(views.View):
         :return: HttpResponse object rendering the shop page.
         """
         items = models.Item.objects.filter(deleted=False).order_by('name')
+        order_data_json = request.COOKIES.get('order')
+        if order_data_json:
+            order_data = json.loads(order_data_json)
         for item in items:
             item.price = utils.convert_number_to_str(item.price)
+            item.quantity = order_data[item.name_snakecase] if order_data_json else ''
         context = {
             'items': items,
         }
-        errors = request.COOKIES.get('errors')
+        errors = [str(x) for x in messages.get_messages(request)]
         if errors:
-            order_data = request.COOKIES.get('order')
             context['errors'] = errors
-            context['order'] = order_data
         res = render(
             request,
             'site_app/shop.html',
             context
         )
-        res.delete_cookie('errors')
         res.delete_cookie('order')
         return res
 
@@ -182,10 +184,9 @@ class ShopView(views.View):
         :return: HttpResponse object redirecting to the order confirmation page or shop page with errors.
         """
         data = request.POST
-        order_raw, errors = utils.prepare_raw_order_data(data)
+        order_raw, errors = utils.prepare_raw_order_data(request, data)
         if errors:
             res = redirect('site_app:shop_view')
-            res.set_cookie('errors', json.dumps(errors))
             res.set_cookie('order', json.dumps(data))
             return res
         else:

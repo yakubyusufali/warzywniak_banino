@@ -33,7 +33,7 @@
         </div>
         <div>
           Ilość:
-          <input type="text" name="{{item.name_snakecase}}" style="display: inline-block; width: 35px;" placeholder="{% if item.unit == 'szt.' %}0{% else %}0,00{% endif %}">
+          <input type="text" name="{{item.name_snakecase}}" style="display: inline-block; width: 35px;{% if item.name_snakecase in errors %} background-color: #ffcccb;{% endif %}" placeholder="{% if item.unit == 'szt.' %}0{% else %}0,00{% endif %}" value="{{ item.quantity }}">
           {{ item.unit }}
         </div>
       </div>
